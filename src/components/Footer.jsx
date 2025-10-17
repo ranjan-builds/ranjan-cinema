@@ -3,33 +3,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { 
   Popcorn, 
-  Film, 
-  Heart, 
   Github, 
   Twitter, 
   Facebook, 
   Instagram,
-  Mail,
-  ExternalLink,
   Star
 } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-
-  const quickLinks = [
-    { name: "Home", path: "/" },
-    { name: "Movies", path: "/movies" },
-    { name: "Trending", path: "/trending" },
-    { name: "Upcoming", path: "/upcoming" },
-  ];
-
-  const supportLinks = [
-    { name: "About Us", path: "/about" },
-    { name: "Contact", path: "/contact" },
-    { name: "Privacy Policy", path: "/privacy" },
-    { name: "Terms of Service", path: "/terms" },
-  ];
 
   const socialLinks = [
     { 
@@ -70,10 +52,10 @@ export default function Footer() {
         
         {/* Main Footer Content */}
         <div className="py-12 lg:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 lg:gap-12">
             
             {/* Brand Section */}
-            <div className="lg:col-span-1 space-y-4">
+            <div className="space-y-4">
               <Link to="/" className="flex items-center gap-3 group">
                 <div className="relative">
                   <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-yellow-400/20">
@@ -93,7 +75,7 @@ export default function Footer() {
                 </div>
               </Link>
               
-              <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+              <p className="text-gray-400 text-sm leading-relaxed max-w-md">
                 Discover, explore, and save your favorite movies. Your ultimate destination for cinematic experiences and movie magic.
               </p>
               
@@ -117,89 +99,29 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Quick Links */}
+            {/* TMDB Attribution & Info */}
             <div className="space-y-4">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <Film className="w-5 h-5 text-yellow-400" />
-                Quick Links
+              <h3 className="text-white font-bold text-lg">
+                About CineVerse
               </h3>
-              <ul className="space-y-3">
-                {quickLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.path}
-                      className="text-gray-400 hover:text-yellow-400 transition-all duration-300 flex items-center gap-2 group text-sm"
-                    >
-                      <div className="w-1 h-1 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div className="space-y-4">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-400" />
-                Support
-              </h3>
-              <ul className="space-y-3">
-                {supportLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.path}
-                      className="text-gray-400 hover:text-yellow-400 transition-all duration-300 flex items-center gap-2 group text-sm"
-                    >
-                      <div className="w-1 h-1 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Newsletter & Contact */}
-            <div className="space-y-4">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <Mail className="w-5 h-5 text-blue-400" />
-                Stay Updated
-              </h3>
-              <p className="text-gray-400 text-sm">
-                Subscribe to get notified about new features and movie updates.
+              <p className="text-gray-400 text-sm leading-relaxed">
+                CineVerse is your go-to platform for discovering and exploring movies from around the world. 
+                Save your favorites and never miss a great film again.
               </p>
               
-              {/* Newsletter Form */}
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/30 transition-all duration-300"
-                  />
-                  <button className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 transform hover:scale-105 text-sm">
-                    Join
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">
-                  No spam, unsubscribe at any time.
-                </p>
-              </div>
-
               {/* TMDB Attribution */}
-              <div className="pt-4 border-t border-gray-800/50">
-                <p className="text-xs text-gray-500 flex items-center gap-1">
-                  Powered by{" "}
-                  <a
-                    href="https://www.themoviedb.org/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-yellow-400 transition-colors duration-300 flex items-center gap-1"
-                  >
-                    TMDB
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+              <div className="pt-4">
+                <p className="text-xs text-gray-500">
+                  This product uses the TMDB API but is not endorsed or certified by TMDB.
                 </p>
+                <a
+                  href="https://www.themoviedb.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-yellow-400 transition-colors duration-300 text-sm mt-2 inline-block"
+                >
+                  Data provided by The Movie Database (TMDB)
+                </a>
               </div>
             </div>
           </div>
@@ -218,8 +140,6 @@ export default function Footer() {
             
             <div className="flex items-center gap-6 text-xs text-gray-500">
               <span>v1.0.0</span>
-              <span>•</span>
-              <span>Data provided by TMDB</span>
               <span>•</span>
               <span>100% Open Source</span>
             </div>

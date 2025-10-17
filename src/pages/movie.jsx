@@ -122,8 +122,10 @@ const Movie = () => {
 
   // Check if movie is bookmarked on component mount
   useEffect(() => {
-    const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-    const isMovieSaved = savedMovies.some(savedMovie => savedMovie.id === parseInt(id));
+    const savedMovies = JSON.parse(localStorage.getItem("savedMovies") || "[]");
+    const isMovieSaved = savedMovies.some(
+      (savedMovie) => savedMovie.id === parseInt(id)
+    );
     setIsBookmarked(isMovieSaved);
   }, [id]);
 
@@ -171,12 +173,14 @@ const Movie = () => {
 
   // Bookmark functionality
   const toggleBookmark = () => {
-    const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-    
+    const savedMovies = JSON.parse(localStorage.getItem("savedMovies") || "[]");
+
     if (isBookmarked) {
       // Remove from bookmarks
-      const updatedMovies = savedMovies.filter(savedMovie => savedMovie.id !== movie.id);
-      localStorage.setItem('savedMovies', JSON.stringify(updatedMovies));
+      const updatedMovies = savedMovies.filter(
+        (savedMovie) => savedMovie.id !== movie.id
+      );
+      localStorage.setItem("savedMovies", JSON.stringify(updatedMovies));
       setIsBookmarked(false);
     } else {
       // Add to bookmarks
@@ -186,58 +190,73 @@ const Movie = () => {
         poster_path: movie.poster_path,
         release_date: movie.release_date,
         vote_average: movie.vote_average,
-        overview: movie.overview
+        overview: movie.overview,
       };
-      
+
       const updatedMovies = [...savedMovies, movieToSave];
-      localStorage.setItem('savedMovies', JSON.stringify(updatedMovies));
+      localStorage.setItem("savedMovies", JSON.stringify(updatedMovies));
       setIsBookmarked(true);
     }
 
     // Dispatch custom event to update navbar count
-    window.dispatchEvent(new Event('savedMoviesUpdated'));
+    window.dispatchEvent(new Event("savedMoviesUpdated"));
   };
 
   // Share functionality
-  const shareMovie = async (platform = 'copy') => {
+  const shareMovie = async (platform = "copy") => {
     const movieUrl = window.location.href;
     const shareText = `Check out "${movie.title}" on CineVerse!`;
-    
+
     switch (platform) {
-      case 'copy':
+      case "copy":
         try {
           await navigator.clipboard.writeText(movieUrl);
           setCopySuccess(true);
           setTimeout(() => setCopySuccess(false), 2000);
         } catch (err) {
           // Fallback for older browsers
-          const textArea = document.createElement('textarea');
+          const textArea = document.createElement("textarea");
           textArea.value = movieUrl;
           document.body.appendChild(textArea);
           textArea.select();
-          document.execCommand('copy');
+          document.execCommand("copy");
           document.body.removeChild(textArea);
           setCopySuccess(true);
           setTimeout(() => setCopySuccess(false), 2000);
         }
         break;
-      
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(movieUrl)}`, '_blank');
+
+      case "twitter":
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            shareText
+          )}&url=${encodeURIComponent(movieUrl)}`,
+          "_blank"
+        );
         break;
-      
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(movieUrl)}`, '_blank');
+
+      case "facebook":
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            movieUrl
+          )}`,
+          "_blank"
+        );
         break;
-      
-      case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + movieUrl)}`, '_blank');
+
+      case "whatsapp":
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(
+            shareText + " " + movieUrl
+          )}`,
+          "_blank"
+        );
         break;
-      
+
       default:
         break;
     }
-    
+
     setShowShareDropdown(false);
   };
 
@@ -249,15 +268,15 @@ const Movie = () => {
 
   const formatCurrency = (amount) => {
     if (!amount) return "N/A";
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
-  if (isLoading ) {
+  if (isLoading) {
     return (
       <div className="w-full h-screen grid place-items-center bg-gray-900">
         <div className="text-center space-y-4">
@@ -417,33 +436,37 @@ const Movie = () => {
                             Budget
                           </span>
                         </div>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-2xl font-bold text-white w-full truncate">
                           {formatCurrency(movie.budget)}
                         </p>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-3 mb-6 md:mb-8">
-                      <button
-                        onClick={openTrailer}
-                        className="flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                        style={{
-                          background: `linear-gradient(135deg, ${getLighterShade(
-                            bgColor,
-                            20
-                          )}, ${getLighterShade(bgColor, -10)})`,
-                          color: getContrastColor(bgColor),
-                        }}
-                      >
-                        <Play size={20} className="flex-shrink-0" />
-                        <span>Watch Trailer</span>
-                      </button>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 md:mb-8">
+                      {/* Watch Trailer Button - Full width on mobile */}
+                      <div className="w-full sm:w-auto">
+                        <button
+                          onClick={openTrailer}
+                          className="flex items-center justify-center gap-3 px-6 md:px-8 py-3 md:py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
+                          style={{
+                            background: `linear-gradient(135deg, ${getLighterShade(
+                              bgColor,
+                              20
+                            )}, ${getLighterShade(bgColor, -10)})`,
+                            color: getContrastColor(bgColor),
+                          }}
+                        >
+                          <Play size={20} className="flex-shrink-0" />
+                          <span>Watch Trailer</span>
+                        </button>
+                      </div>
 
-                      <div className="flex gap-2">
+                      {/* Action Buttons - Aligned properly on mobile */}
+                      <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
                         <button
                           onClick={toggleBookmark}
-                          className={`flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 ${
+                          className={`flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 flex-1 sm:flex-none ${
                             isBookmarked
                               ? "bg-yellow-500 border-yellow-500 text-gray-900"
                               : "bg-white/10 border-white/20 text-white hover:bg-white/20"
@@ -456,45 +479,56 @@ const Movie = () => {
                         </button>
 
                         <button
-                         
-                          className="flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                          onClick={() =>
+                            window.open(
+                              `https://bollyflix.esq/search/${encodeURIComponent(
+                                movie.title
+                              )}`,
+                              "_blank"
+                            )
+                          }
+                          className="flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 bg-white/10 border-white/20 text-white hover:bg-white/20 flex-1 sm:flex-none"
                         >
-                          <Download  size={20}/>
-                           
-                          
-                         
+                          <Download size={20} />
                         </button>
 
-                        <DropdownMenu open={showShareDropdown} onOpenChange={setShowShareDropdown}>
+                        <DropdownMenu
+                          open={showShareDropdown}
+                          onOpenChange={setShowShareDropdown}
+                        >
                           <DropdownMenuTrigger asChild>
-                            <button className="flex items-center justify-center w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl transition-all duration-300 border border-white/20 text-white transform hover:scale-110">
-                              {copySuccess ? <Check size={20} /> : <Share2 size={20} />}
+                            <button className="flex items-center justify-center w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl transition-all duration-300 border border-white/20 text-white transform hover:scale-110 flex-1 sm:flex-none">
+                              {copySuccess ? (
+                                <Check size={20} />
+                              ) : (
+                                <Share2 size={20} />
+                              )}
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="bg-gray-800 border border-gray-700 rounded-xl backdrop-blur-sm">
-                            <DropdownMenuItem 
-                              onClick={() => shareMovie('copy')}
+                            <DropdownMenuItem
+                              onClick={() => shareMovie("copy")}
                               className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
                             >
                               <Link size={16} />
                               Copy Link
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => shareMovie('twitter')}
+                            <DropdownMenuItem
+                              onClick={() => shareMovie("twitter")}
                               className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
                             >
                               <Twitter size={16} />
                               Share on Twitter
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => shareMovie('facebook')}
+                            <DropdownMenuItem
+                              onClick={() => shareMovie("facebook")}
                               className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
                             >
                               <Facebook size={16} />
                               Share on Facebook
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => shareMovie('whatsapp')}
+                            <DropdownMenuItem
+                              onClick={() => shareMovie("whatsapp")}
                               className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
                             >
                               <MessageCircle size={16} />
@@ -604,7 +638,9 @@ const Movie = () => {
             <button
               onClick={toggleBookmark}
               className={`p-2 rounded-xl transition-colors transform hover:scale-110 ${
-                isBookmarked ? "text-yellow-400" : "text-white hover:bg-white/10"
+                isBookmarked
+                  ? "text-yellow-400"
+                  : "text-white hover:bg-white/10"
               }`}
             >
               <Bookmark
@@ -612,8 +648,8 @@ const Movie = () => {
                 fill={isBookmarked ? "currentColor" : "none"}
               />
             </button>
-            <button 
-              onClick={() => shareMovie('copy')}
+            <button
+              onClick={() => shareMovie("copy")}
               className="p-2 text-white hover:bg-white/10 rounded-xl transition-colors transform hover:scale-110"
             >
               {copySuccess ? <Check size={16} /> : <Share2 size={16} />}
@@ -624,8 +660,8 @@ const Movie = () => {
 
       {/* Trailer Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="max-h-[90vh] bg-gray-900 border-gray-700">
-          <DrawerHeader className="text-center border-b border-gray-700">
+        <DrawerContent className="max-h-[90vh] bg-black ">
+          <DrawerHeader className="text-center">
             <DrawerTitle className="text-2xl text-white">
               {movie?.title} - Trailer
             </DrawerTitle>

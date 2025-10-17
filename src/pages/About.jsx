@@ -94,7 +94,7 @@ const About = () => {
     {
       icon: <Terminal className="w-5 h-5" />,
       label: "Built by",
-      value: "ranjan",
+      value: "Ranjan Kashyap",
       highlight: true
     },
     {
@@ -142,13 +142,13 @@ const About = () => {
             {/* Avatar & Basic Info */}
             <div className="text-center lg:text-left">
               <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto lg:mx-0 mb-6">
-                <Code className="w-16 h-16 text-gray-900" />
+              <img src="https://i.ibb.co/dscj1mWL/a-professional-studio-portrait-photograp-j9ow-Qc-Lw-RCW7-Oe-Bazlo-Wu-A-ct67v9-UXSJu-T6fx-Nfb-h-VA.jpg" alt="ranjan" className="rounded-2xl" />
               </div>
-              <h2 className="text-3xl font-bold text-white mb-2">ranjan</h2>
+              <h2 className="text-3xl font-bold text-white mb-2">Ranjan Kashyap</h2>
               <p className="text-gray-400 mb-4">Frontend Developer</p>
               <div className="flex justify-center lg:justify-start gap-3">
                 <a
-                  href="https://github.com/ranjan"
+                  href="https://github.com/ranjan-builds"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-3 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-xl text-gray-300 hover:text-white transition-all duration-300 transform hover:scale-105"
@@ -156,7 +156,7 @@ const About = () => {
                   <Github className="w-5 h-5" />
                 </a>
                 <a
-                  href="mailto:ranjan@example.com"
+                  href="mailto:ranjankashyap6475@gmail.com"
                   className="p-3 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 rounded-xl text-gray-300 hover:text-white transition-all duration-300 transform hover:scale-105"
                 >
                   <Mail className="w-5 h-5" />
@@ -337,7 +337,7 @@ const About = () => {
               Interested in the code? Check out the project repository on GitHub.
             </p>
             <a
-              href="https://github.com/ranjan/cineverse"
+              href="https://github.com/Ranjan Kashyap/cineverse"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:border-purple-500/50 rounded-lg transition-all duration-300"
@@ -364,7 +364,7 @@ const About = () => {
               Explore Movies
             </Link>
             <a
-              href="mailto:ranjan@example.com"
+              href="mailto:Ranjan Kashyap@example.com"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white border border-gray-600/50 hover:border-gray-500 rounded-xl transition-all duration-300 transform hover:scale-105"
             >
               <Mail className="w-5 h-5" />

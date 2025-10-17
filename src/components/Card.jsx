@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Star, Calendar, Play, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -7,12 +7,47 @@ const Card = ({ movie }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // Check if movie is already bookmarked
+  useEffect(() => {
+    const savedMovies = JSON.parse(localStorage.getItem("savedMovies") || "[]");
+    const isMovieSaved = savedMovies.some(
+      (savedMovie) => savedMovie.id === movie.id
+    );
+    setIsBookmarked(isMovieSaved);
+  }, [movie.id]);
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
-    // Here you can add logic to save to favorites
+    
+    const savedMovies = JSON.parse(localStorage.getItem("savedMovies") || "[]");
+
+    if (isBookmarked) {
+      // Remove from bookmarks
+      const updatedMovies = savedMovies.filter(
+        (savedMovie) => savedMovie.id !== movie.id
+      );
+      localStorage.setItem("savedMovies", JSON.stringify(updatedMovies));
+      setIsBookmarked(false);
+    } else {
+      // Add to bookmarks
+      const movieToSave = {
+        id: movie.id,
+        title: movie.title,
+        poster_path: movie.poster_path,
+        release_date: movie.release_date,
+        vote_average: movie.vote_average,
+        overview: movie.overview,
+      };
+
+      const updatedMovies = [...savedMovies, movieToSave];
+      localStorage.setItem("savedMovies", JSON.stringify(updatedMovies));
+      setIsBookmarked(true);
+    }
+
+    // Dispatch custom event to update navbar count
+    window.dispatchEvent(new Event("savedMoviesUpdated"));
   };
 
   const handleCardClick = () => {
@@ -41,16 +76,19 @@ const Card = ({ movie }) => {
       <button
         onClick={handleFavoriteClick}
         className={`absolute top-3 right-3 z-20 p-2 rounded-full backdrop-blur-sm transition-all duration-300 transform ${
-          isFavorite
+          isBookmarked
             ? "bg-red-500/90 scale-110"
             : "bg-black/50 hover:bg-black/70 scale-100"
         } group-hover:scale-110`}
       >
         <Heart
           className={`w-4 h-4 transition-all duration-300 ${
-            isFavorite ? "fill-white scale-110" : "text-white group-hover:scale-110"
+            isBookmarked
+              ? "fill-white scale-110"
+              : "text-white group-hover:scale-110"
           }`}
           size={16}
+          fill={isBookmarked ? "currentColor" : "none"}
         />
       </button>
 
@@ -62,36 +100,32 @@ const Card = ({ movie }) => {
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gray-700 animate-pulse rounded-2xl" />
             )}
-            
+
             {/* Main Image */}
             <img
               src={`${imageBaseUrl}${movie.poster_path}`}
               alt={movie.title || "Movie Poster"}
               className={`object-cover w-full h-full transition-all duration-700 ${
-                imageLoaded
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-105"
+                imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
               } ${isHovered ? "scale-110" : "scale-100"}`}
               onLoad={() => setImageLoaded(true)}
             />
-            
+
             {/* Overlay on Hover */}
             <div
               className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-all duration-500 ${
                 isHovered ? "opacity-100" : "opacity-70"
               }`}
             />
-            
+
             {/* Play Button on Hover */}
             <div
               className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
-                isHovered
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-90"
+                isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90"
               }`}
             >
               <div className="bg-white/20 backdrop-blur-md rounded-full p-4 transform group-hover:scale-110 transition-transform duration-300">
-                <Play className="w-8 h-8 text-white fill-white" />
+                <Play className="w-8 h-8 text-white" fill="currentColor" />
               </div>
             </div>
           </>
@@ -109,9 +143,7 @@ const Card = ({ movie }) => {
       {/* Content */}
       <div
         className={`absolute bottom-0 left-0 right-0 p-4 transition-all duration-500 ${
-          isHovered
-            ? "translate-y-0 opacity-100"
-            : "translate-y-2 opacity-90"
+          isHovered ? "translate-y-0 opacity-100" : "translate-y-2 opacity-90"
         }`}
       >
         {/* Title */}

@@ -13,39 +13,15 @@ import {
   Clock,
   X,
 } from "lucide-react";
-import Card from "@/components/Card";
-
 const SavedMovies = () => {
   const [savedMovies, setSavedMovies] = useState([]);
   const [filteredMovies, setFilteredMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("dateAdded");
-  const [viewMode, setViewMode] = useState("grid");
-  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [viewMode, setViewMode] = useState("list");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Available genres for filtering
-  const genres = [
-    "Action",
-    "Adventure",
-    "Animation",
-    "Comedy",
-    "Crime",
-    "Documentary",
-    "Drama",
-    "Family",
-    "Fantasy",
-    "History",
-    "Horror",
-    "Music",
-    "Mystery",
-    "Romance",
-    "Science Fiction",
-    "TV Movie",
-    "Thriller",
-    "War",
-    "Western",
-  ];
+
 
   // Format date function - moved to top level
   const formatDate = (timestamp) => {
@@ -62,7 +38,7 @@ const SavedMovies = () => {
 
   useEffect(() => {
     filterAndSortMovies();
-  }, [savedMovies, searchQuery, sortBy, selectedGenres]);
+  }, [savedMovies, searchQuery, sortBy]);
 
   const loadSavedMovies = () => {
     setIsLoading(true);
@@ -94,15 +70,7 @@ const SavedMovies = () => {
       );
     }
 
-    // Genre filter
-    if (selectedGenres.length > 0) {
-      filtered = filtered.filter(
-        (movie) =>
-          movie.genres?.some((genre) => selectedGenres.includes(genre.name)) ||
-          (typeof movie.genre_names === "string" &&
-            selectedGenres.some((genre) => movie.genre_names.includes(genre)))
-      );
-    }
+ 
 
     // Sort
     filtered.sort((a, b) => {
@@ -139,11 +107,7 @@ const SavedMovies = () => {
     }
   };
 
-  const toggleGenre = (genre) => {
-    setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
-    );
-  };
+ 
 
   // Saved Movie Card Component - now inside main component to access formatDate
   const SavedMovieCard = ({ movie, onRemove, viewMode }) => {
@@ -373,41 +337,6 @@ const SavedMovies = () => {
                   <option value="rating">Rating</option>
                   <option value="releaseDate">Release Date</option>
                 </select>
-              </div>
-
-              {/* Genres */}
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-yellow-400" />
-                  Genres
-                </h3>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {genres.map((genre) => (
-                    <label
-                      key={genre}
-                      className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors cursor-pointer group"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedGenres.includes(genre)}
-                        onChange={() => toggleGenre(genre)}
-                        className="w-4 h-4 text-yellow-400 bg-gray-700 border-gray-600 rounded focus:ring-yellow-400 focus:ring-2"
-                      />
-                      <span className="group-hover:text-yellow-400 transition-colors">
-                        {genre}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-
-                {selectedGenres.length > 0 && (
-                  <button
-                    onClick={() => setSelectedGenres([])}
-                    className="w-full mt-4 px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-600/50 hover:border-gray-500 rounded-lg transition-all duration-300"
-                  >
-                    Clear Filters
-                  </button>
-                )}
               </div>
 
               {/* View Mode */}

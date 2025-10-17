@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Shuffle, 
-  Filter, 
-  Search, 
-  Star, 
-  Calendar, 
+import {
+  Shuffle,
+  Filter,
+  Search,
+  Bookmark,
+  Calendar,
   Users,
-  Clock,
   X,
   SlidersHorizontal,
-  Play
+  Play,
 } from "lucide-react";
 import Card from "@/components/Card";
-import { Spinner } from "@/components/ui/spinner";
+import { useNavigate } from "react-router-dom";
 
 const Discover = () => {
   const [movies, setMovies] = useState([]);
@@ -23,14 +22,15 @@ const Discover = () => {
     genre: "",
     year: "",
     rating: "",
-    popularity: "",
     sortBy: "popularity.desc",
-    withKeywords: ""
+    withKeywords: "",
   });
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
   const apiKey = import.meta.env.VITE_TMDB_API_KEY;
 
   // Genres list
@@ -53,18 +53,38 @@ const Discover = () => {
     { id: 10770, name: "TV Movie" },
     { id: 53, name: "Thriller" },
     { id: 10752, name: "War" },
-    { id: 37, name: "Western" }
+    { id: 37, name: "Western" },
   ];
 
+  const navigate = useNavigate();
+
+  const handleMovieClick = (id) => {
+    navigate(`/movie/${id}`);
+  };
+
   // Years for filter
-  const years = Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i);
+  const years = Array.from(
+    { length: 50 },
+    (_, i) => new Date().getFullYear() - i
+  );
+
+  // Check if random movie is bookmarked
+  useEffect(() => {
+    if (randomMovie) {
+      const savedMovies = JSON.parse(
+        localStorage.getItem("savedMovies") || "[]"
+      );
+      const isSaved = savedMovies.some((movie) => movie.id === randomMovie.id);
+      setIsBookmarked(isSaved);
+    }
+  }, [randomMovie]);
 
   // Fetch movies based on filters
   const fetchMovies = async (page = 1, resetRandom = true) => {
     setLoading(true);
     try {
       let url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&page=${page}`;
-      
+
       // Add filters to URL
       if (filters.genre) url += `&with_genres=${filters.genre}`;
       if (filters.year) url += `&year=${filters.year}`;
@@ -74,7 +94,7 @@ const Discover = () => {
 
       const response = await fetch(url);
       const data = await response.json();
-      
+
       setMovies(data.results || []);
       setTotalPages(Math.min(data.total_pages || 1, 500)); // TMDB limits to 500 pages
       setCurrentPage(page);
@@ -116,6 +136,38 @@ const Discover = () => {
     }
   };
 
+  const toggleBookmark = () => {
+    if (!randomMovie) return;
+
+    const savedMovies = JSON.parse(localStorage.getItem("savedMovies") || "[]");
+
+    if (isBookmarked) {
+      // Remove from bookmarks
+      const updatedMovies = savedMovies.filter(
+        (savedMovie) => savedMovie.id !== randomMovie.id
+      );
+      localStorage.setItem("savedMovies", JSON.stringify(updatedMovies));
+      setIsBookmarked(false);
+    } else {
+      // Add to bookmarks
+      const movieToSave = {
+        id: randomMovie.id,
+        title: randomMovie.title,
+        poster_path: randomMovie.poster_path,
+        release_date: randomMovie.release_date,
+        vote_average: randomMovie.vote_average,
+        overview: randomMovie.overview,
+      };
+
+      const updatedMovies = [...savedMovies, movieToSave];
+      localStorage.setItem("savedMovies", JSON.stringify(updatedMovies));
+      setIsBookmarked(true);
+    }
+
+    // Dispatch custom event to update navbar count
+    window.dispatchEvent(new Event("savedMoviesUpdated"));
+  };
+
   // Search movies
   const searchMovies = async (query, page = 1) => {
     if (!query.trim()) {
@@ -126,7 +178,9 @@ const Discover = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&page=${page}`
+        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(
+          query
+        )}&page=${page}`
       );
       const data = await response.json();
       setMovies(data.results || []);
@@ -141,9 +195,9 @@ const Discover = () => {
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -161,9 +215,8 @@ const Discover = () => {
       genre: "",
       year: "",
       rating: "",
-      popularity: "",
       sortBy: "popularity.desc",
-      withKeywords: ""
+      withKeywords: "",
     });
     setSearchQuery("");
     setCurrentPage(1);
@@ -186,10 +239,10 @@ const Discover = () => {
   const Pagination = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -198,7 +251,9 @@ const Discover = () => {
       pages.push(
         <button
           key={i}
-          onClick={() => searchQuery ? searchMovies(searchQuery, i) : fetchMovies(i, false)}
+          onClick={() =>
+            searchQuery ? searchMovies(searchQuery, i) : fetchMovies(i, false)
+          }
           className={`px-3 py-2 rounded-lg transition-all duration-300 ${
             currentPage === i
               ? "bg-yellow-400 text-gray-900 font-bold"
@@ -213,17 +268,25 @@ const Discover = () => {
     return (
       <div className="flex items-center justify-center gap-2 mt-8">
         <button
-          onClick={() => searchQuery ? searchMovies(searchQuery, currentPage - 1) : fetchMovies(currentPage - 1, false)}
+          onClick={() =>
+            searchQuery
+              ? searchMovies(searchQuery, currentPage - 1)
+              : fetchMovies(currentPage - 1, false)
+          }
           disabled={currentPage === 1}
           className="px-3 py-2 bg-gray-700/50 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50 transition-all duration-300"
         >
           Previous
         </button>
-        
+
         {startPage > 1 && (
           <>
             <button
-              onClick={() => searchQuery ? searchMovies(searchQuery, 1) : fetchMovies(1, false)}
+              onClick={() =>
+                searchQuery
+                  ? searchMovies(searchQuery, 1)
+                  : fetchMovies(1, false)
+              }
               className="px-3 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-all duration-300"
             >
               1
@@ -236,9 +299,15 @@ const Discover = () => {
 
         {endPage < totalPages && (
           <>
-            {endPage < totalPages - 1 && <span className="text-gray-400">...</span>}
+            {endPage < totalPages - 1 && (
+              <span className="text-gray-400">...</span>
+            )}
             <button
-              onClick={() => searchQuery ? searchMovies(searchQuery, totalPages) : fetchMovies(totalPages, false)}
+              onClick={() =>
+                searchQuery
+                  ? searchMovies(searchQuery, totalPages)
+                  : fetchMovies(totalPages, false)
+              }
               className="px-3 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-all duration-300"
             >
               {totalPages}
@@ -247,7 +316,11 @@ const Discover = () => {
         )}
 
         <button
-          onClick={() => searchQuery ? searchMovies(searchQuery, currentPage + 1) : fetchMovies(currentPage + 1, false)}
+          onClick={() =>
+            searchQuery
+              ? searchMovies(searchQuery, currentPage + 1)
+              : fetchMovies(currentPage + 1, false)
+          }
           disabled={currentPage === totalPages}
           className="px-3 py-2 bg-gray-700/50 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50 transition-all duration-300"
         >
@@ -260,14 +333,17 @@ const Discover = () => {
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-6xl font-black text-white mb-4">
-            Discover <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Movies</span>
+            Discover{" "}
+            <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+              Movies
+            </span>
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Find your next favorite movie with advanced filters and random suggestions
+            Find your next favorite movie with advanced filters and random
+            suggestions
           </p>
         </div>
 
@@ -296,25 +372,29 @@ const Discover = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
               <div className="lg:col-span-1">
                 <img
-                  src={`https://image.tmdb.org/t/p/w500${randomMovie.poster_path}`}
+                  src={
+                    randomMovie.poster_path
+                      ? `https://image.tmdb.org/t/p/w500${randomMovie.poster_path}`
+                      : "/placeholder-poster.jpg"
+                  }
                   alt={randomMovie.title}
                   className="w-full rounded-2xl shadow-2xl"
                 />
               </div>
-              
+
               <div className="lg:col-span-2">
                 <h3 className="text-3xl font-bold text-white mb-4">
                   {randomMovie.title}
                 </h3>
-                
+
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-yellow-400/30">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                    <Bookmark className="w-4 h-4 text-yellow-400" />
                     <span className="text-yellow-100 font-bold">
                       {randomMovie.vote_average?.toFixed(1)}
                     </span>
                   </div>
-                  
+
                   {randomMovie.release_date && (
                     <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
                       <Calendar className="w-4 h-4 text-white" />
@@ -323,7 +403,7 @@ const Discover = () => {
                       </span>
                     </div>
                   )}
-                  
+
                   <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
                     <Users className="w-4 h-4 text-white" />
                     <span className="text-white">
@@ -337,13 +417,28 @@ const Discover = () => {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  <button className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 transform hover:scale-105">
+                  <button
+                    onClick={() => handleMovieClick(randomMovie.id)}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 transform hover:scale-105"
+                  >
                     <Play className="w-5 h-5" />
                     View Details
                   </button>
-                  <button className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/30 rounded-xl transition-all duration-300">
-                    <Star className="w-5 h-5" />
-                    Add to Watchlist
+                  <button
+                    onClick={toggleBookmark}
+                    className={`flex items-center gap-2 px-6 py-3 border rounded-xl transition-all duration-300 ${
+                      isBookmarked
+                        ? "bg-yellow-400/20 text-yellow-400 border-yellow-400/30"
+                        : "bg-white/10 text-white border-white/20 hover:bg-white/20"
+                    }`}
+                  >
+                    <Bookmark
+                      size={16}
+                      fill={isBookmarked ? "currentColor" : "none"}
+                    />
+                    {isBookmarked
+                      ? "Remove from Watchlist"
+                      : "Add to Watchlist"}
                   </button>
                 </div>
               </div>
@@ -381,12 +476,12 @@ const Discover = () => {
             >
               <SlidersHorizontal className="w-4 h-4" />
               Filters
-              {Object.values(filters).some(value => value) && (
+              {Object.values(filters).some((value) => value) && (
                 <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
               )}
             </button>
 
-            {Object.values(filters).some(value => value) && (
+            {Object.values(filters).some((value) => value) && (
               <button
                 onClick={clearFilters}
                 className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors duration-300"
@@ -408,11 +503,13 @@ const Discover = () => {
                   </label>
                   <select
                     value={filters.genre}
-                    onChange={(e) => handleFilterChange('genre', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("genre", e.target.value)
+                    }
                     className="w-full px-3 py-2 bg-gray-600/50 border border-gray-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
                   >
                     <option value="">All Genres</option>
-                    {genres.map(genre => (
+                    {genres.map((genre) => (
                       <option key={genre.id} value={genre.id}>
                         {genre.name}
                       </option>
@@ -427,11 +524,11 @@ const Discover = () => {
                   </label>
                   <select
                     value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
+                    onChange={(e) => handleFilterChange("year", e.target.value)}
                     className="w-full px-3 py-2 bg-gray-600/50 border border-gray-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
                   >
                     <option value="">All Years</option>
-                    {years.map(year => (
+                    {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
                       </option>
@@ -446,7 +543,9 @@ const Discover = () => {
                   </label>
                   <select
                     value={filters.rating}
-                    onChange={(e) => handleFilterChange('rating', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("rating", e.target.value)
+                    }
                     className="w-full px-3 py-2 bg-gray-600/50 border border-gray-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
                   >
                     <option value="">Any Rating</option>
@@ -464,7 +563,9 @@ const Discover = () => {
                   </label>
                   <select
                     value={filters.sortBy}
-                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("sortBy", e.target.value)
+                    }
                     className="w-full px-3 py-2 bg-gray-600/50 border border-gray-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
                   >
                     <option value="popularity.desc">Popularity</option>
@@ -494,7 +595,9 @@ const Discover = () => {
           {/* Results Info */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">
-              {searchQuery ? `Search Results for "${searchQuery}"` : "Discover Movies"}
+              {searchQuery
+                ? `Search Results for "${searchQuery}"`
+                : "Discover Movies"}
             </h2>
             <p className="text-gray-400">
               Page {currentPage} of {totalPages}
@@ -511,7 +614,7 @@ const Discover = () => {
           ) : movies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                {movies.map(movie => (
+                {movies.map((movie) => (
                   <div
                     key={movie.id}
                     className="group cursor-pointer transform hover:scale-105 transition-transform duration-300"
@@ -531,10 +634,9 @@ const Discover = () => {
                 No movies found
               </h3>
               <p className="text-gray-500 mb-4">
-                {searchQuery 
+                {searchQuery
                   ? `No results found for "${searchQuery}"`
-                  : "Try adjusting your filters to find more movies"
-                }
+                  : "Try adjusting your filters to find more movies"}
               </p>
               <button
                 onClick={clearFilters}

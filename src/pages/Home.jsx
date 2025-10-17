@@ -170,26 +170,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Debug Info */}
-          <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-2xl p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-yellow-400 font-bold">Debug Info</h3>
-                <p className="text-yellow-300 text-sm">
-                  Initialized: {isInitialized ? 'Yes' : 'No'} | 
-                  Fetched: {hasFetched ? 'Yes' : 'No'} | 
-                  All Loaded: {allLoaded ? 'Yes' : 'No'} | 
-                  Has Movies: {hasMovies ? 'Yes' : 'No'}
-                </p>
-              </div>
-              <button
-                onClick={handleRefresh}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-gray-900 rounded-xl font-medium hover:bg-yellow-500 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
-            </div>
-          </div>
+      
 
           {/* Header */}
           <div className="text-center mb-12">

@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
 const TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie";
 
-export default function SearchMovies() {
+export default function SearchMovies({ className = "" }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -105,11 +105,11 @@ export default function SearchMovies() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-yellow-400/30 text-gray-300 hover:text-white transition-all duration-300 group"
+        <Button
+          variant="outline"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-yellow-400/30 text-gray-300 hover:text-white transition-all duration-300 group ${className}`}
         >
-          <Search className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+          <Search className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
           <span className="hidden md:block">Search Movies...</span>
         </Button>
       </DialogTrigger>
@@ -214,7 +214,7 @@ export default function SearchMovies() {
                         <Film className="w-6 h-6 text-gray-400" />
                       </div>
                     )}
-                    
+
                     {/* Play overlay on hover */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <Play className="w-6 h-6 text-white fill-white" />
@@ -228,7 +228,11 @@ export default function SearchMovies() {
                         {movie.title}
                       </h3>
                       {movie.vote_average > 0 && (
-                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-gray-700/50 backdrop-blur-sm ${getRatingColor(movie.vote_average)}`}>
+                        <div
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full bg-gray-700/50 backdrop-blur-sm ${getRatingColor(
+                            movie.vote_average
+                          )}`}
+                        >
                           <Star className="w-3 h-3 fill-current" />
                           <span className="text-xs font-bold">
                             {movie.vote_average.toFixed(1)}
@@ -257,10 +261,10 @@ export default function SearchMovies() {
                     {movie.popularity > 10 && (
                       <div className="flex items-center gap-2 text-xs">
                         <div className="flex-1 bg-gray-700 rounded-full h-1.5">
-                          <div 
+                          <div
                             className="bg-gradient-to-r from-yellow-400 to-orange-500 h-full rounded-full transition-all duration-500"
-                            style={{ 
-                              width: `${Math.min(movie.popularity / 2, 100)}%` 
+                            style={{
+                              width: `${Math.min(movie.popularity / 2, 100)}%`,
                             }}
                           />
                         </div>
@@ -286,11 +290,17 @@ export default function SearchMovies() {
                   Search for Movies
                 </h3>
                 <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                  Type the name of any movie to discover ratings, overview, and more details.
+                  Type the name of any movie to discover ratings, overview, and
+                  more details.
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-2 pt-4">
-                {["Avengers", "Inception", "The Dark Knight", "Interstellar"].map((suggestion) => (
+                {[
+                  "Avengers",
+                  "Inception",
+                  "The Dark Knight",
+                  "Interstellar",
+                ].map((suggestion) => (
                   <button
                     key={suggestion}
                     onClick={() => setQuery(suggestion)}
