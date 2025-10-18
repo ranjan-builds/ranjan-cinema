@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { User, ExternalLink, Sparkles } from "lucide-react";
 import "swiper/css";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, FreeMode } from "swiper/modules";
+import { FreeMode } from "swiper/modules";
 
 const Cast = ({ casts }) => {
   const imageBaseUrl = "https://image.tmdb.org/t/p/w500";
@@ -34,16 +34,10 @@ const Cast = ({ casts }) => {
       </div>
 
       <Swiper
-        modules={[Autoplay, FreeMode]}
+        modules={[FreeMode]}
         spaceBetween={16}
         slidesPerView={3}
         freeMode={true}
-        autoplay={{
-          delay: 4000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
-        speed={800}
         breakpoints={{
           320: { 
             slidesPerView: 2.5,

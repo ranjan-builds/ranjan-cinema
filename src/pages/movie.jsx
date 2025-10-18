@@ -27,7 +27,7 @@ import {
   formatRuntime,
   getLighterShade,
 } from "../lib/Helpers";
-import { Spinner } from "@/components/ui/spinner";
+
 import Card from "@/components/Card";
 import Backdrops from "@/components/Backdrops";
 import Cast from "@/components/Cast";
@@ -43,6 +43,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Loader from "../components/Loader";
 
 export async function generateStaticParams() {
   const apiKey = import.meta.env.VITE_TMDB_API_KEY;
@@ -278,18 +279,15 @@ const Movie = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen grid place-items-center bg-gray-900">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-400 text-lg">Loading movie magic...</p>
-        </div>
+      <div className="w-full h-screen grid place-items-center bg-black">
+        <Loader />
       </div>
     );
   }
 
   return (
     <>
-      <main className="min-h-screen bg-gray-900">
+      <main className="min-h-screen bg-gray-950">
         {/* Enhanced Hero Section */}
         <div
           ref={heroRef}

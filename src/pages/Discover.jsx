@@ -238,7 +238,26 @@ const Discover = () => {
   // Pagination component
   const Pagination = () => {
     const pages = [];
-    const maxVisiblePages = 5;
+    const [maxVisiblePages, setMaxVisiblePages] = useState(5);
+
+    // Responsive page count based on screen size
+    useEffect(() => {
+      const handleResize = () => {
+        if (window.innerWidth < 640) {
+          // sm breakpoint
+          setMaxVisiblePages(3);
+        } else if (window.innerWidth < 768) {
+          // md breakpoint
+          setMaxVisiblePages(4);
+        } else {
+          setMaxVisiblePages(5);
+        }
+      };
+
+      handleResize(); // Set initial value
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
@@ -254,9 +273,9 @@ const Discover = () => {
           onClick={() =>
             searchQuery ? searchMovies(searchQuery, i) : fetchMovies(i, false)
           }
-          className={`px-3 py-2 rounded-lg transition-all duration-300 ${
+          className={`px-2 sm:px-3 py-2 rounded-lg transition-all duration-300 text-sm sm:text-base ${
             currentPage === i
-              ? "bg-yellow-400 text-gray-900 font-bold"
+              ? "bg-yellow-400 text-gray-900 font-bold scale-105"
               : "bg-gray-700/50 text-white hover:bg-gray-600/50"
           }`}
         >
@@ -265,67 +284,82 @@ const Discover = () => {
       );
     }
 
+    const handlePageChange = (page) => {
+      if (searchQuery) {
+        searchMovies(searchQuery, page);
+      } else {
+        fetchMovies(page, false);
+      }
+    };
+
     return (
-      <div className="flex items-center justify-center gap-2 mt-8">
-        <button
-          onClick={() =>
-            searchQuery
-              ? searchMovies(searchQuery, currentPage - 1)
-              : fetchMovies(currentPage - 1, false)
-          }
-          disabled={currentPage === 1}
-          className="px-3 py-2 bg-gray-700/50 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50 transition-all duration-300"
-        >
-          Previous
-        </button>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-8 w-full">
+        {/* Mobile First Navigation */}
+        <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="flex items-center justify-center px-3 py-2 bg-gray-700/50 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50 transition-all duration-300 text-sm sm:text-base flex-1 sm:flex-none min-w-[80px]"
+          >
+            <span className="sm:hidden">← Prev</span>
+            <span className="hidden sm:inline">Previous</span>
+          </button>
 
-        {startPage > 1 && (
-          <>
-            <button
-              onClick={() =>
-                searchQuery
-                  ? searchMovies(searchQuery, 1)
-                  : fetchMovies(1, false)
-              }
-              className="px-3 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-all duration-300"
-            >
-              1
-            </button>
-            {startPage > 2 && <span className="text-gray-400">...</span>}
-          </>
-        )}
+          {/* Mobile current page indicator */}
+          <div className="sm:hidden flex items-center gap-1 px-3 py-2">
+            <span className="text-white text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
 
-        {pages}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="flex items-center justify-center px-3 py-2 bg-gray-700/50 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50 transition-all duration-300 text-sm sm:text-base flex-1 sm:flex-none min-w-[80px]"
+          >
+            <span className="sm:hidden">Next →</span>
+            <span className="hidden sm:inline">Next</span>
+          </button>
+        </div>
 
-        {endPage < totalPages && (
-          <>
-            {endPage < totalPages - 1 && (
-              <span className="text-gray-400">...</span>
-            )}
-            <button
-              onClick={() =>
-                searchQuery
-                  ? searchMovies(searchQuery, totalPages)
-                  : fetchMovies(totalPages, false)
-              }
-              className="px-3 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-all duration-300"
-            >
-              {totalPages}
-            </button>
-          </>
-        )}
+        {/* Desktop Pagination */}
+        <div className="hidden sm:flex items-center justify-center gap-1 lg:gap-2">
+          {/* First page and ellipsis */}
+          {startPage > 1 && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className="px-2 lg:px-3 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-all duration-300 text-sm lg:text-base"
+              >
+                1
+              </button>
+              {startPage > 2 && <span className="text-gray-400 px-1">...</span>}
+            </>
+          )}
 
-        <button
-          onClick={() =>
-            searchQuery
-              ? searchMovies(searchQuery, currentPage + 1)
-              : fetchMovies(currentPage + 1, false)
-          }
-          disabled={currentPage === totalPages}
-          className="px-3 py-2 bg-gray-700/50 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50 transition-all duration-300"
-        >
-          Next
-        </button>
+          {/* Page numbers */}
+          {pages}
+
+          {/* Last page and ellipsis */}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <span className="text-gray-400 px-1">...</span>
+              )}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className="px-2 lg:px-3 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-all duration-300 text-sm lg:text-base"
+              >
+                {totalPages}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Additional mobile info */}
+        <div className="sm:hidden text-gray-400 text-xs mt-2">
+          Swipe for more pages
+        </div>
       </div>
     );
   };

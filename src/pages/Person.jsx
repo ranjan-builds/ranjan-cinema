@@ -2,17 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import CarouselCard from "../components/CarouselCard";
-import { 
-  Calendar, 
-  MapPin, 
-  Star, 
-  Users, 
-  Film, 
+import {
+  Calendar,
+  MapPin,
+  Star,
+  Users,
+  Film,
   Award,
   Heart,
   Play,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
+import Loader from "../components/Loader";
 
 const Person = () => {
   const apiKey = import.meta.env.VITE_TMDB_API_KEY;
@@ -125,11 +126,8 @@ const Person = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-900">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-400 text-lg">Loading person details...</p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen bg-gray-950">
+        <Loader />
       </div>
     );
   }
@@ -173,11 +171,9 @@ const Person = () => {
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
         {/* Person Header */}
         <div className="bg-gray-800/50 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-gray-700/50 mb-8">
           <div className="md:flex">
-            
             {/* Profile Image */}
             <div className="md:flex-shrink-0 relative group">
               {person.profile_path ? (
@@ -197,12 +193,14 @@ const Person = () => {
                   <Users className="w-16 h-16 text-gray-400" />
                 </div>
               )}
-              
+
               {/* Popularity Badge */}
               <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 border border-yellow-400/30">
                 <div className="flex items-center gap-1 text-yellow-400 text-sm">
                   <Star className="w-3 h-3 fill-current" />
-                  <span className="font-semibold">{person.popularity?.toFixed(1)}</span>
+                  <span className="font-semibold">
+                    {person.popularity?.toFixed(1)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -227,7 +225,9 @@ const Person = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">Known For</p>
-                      <p className="text-white font-semibold">{person.known_for_department}</p>
+                      <p className="text-white font-semibold">
+                        {person.known_for_department}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -240,7 +240,11 @@ const Person = () => {
                     <div>
                       <p className="text-sm text-gray-400">Gender</p>
                       <p className="text-white font-semibold">
-                        {person.gender === 1 ? "Female" : person.gender === 2 ? "Male" : "Not specified"}
+                        {person.gender === 1
+                          ? "Female"
+                          : person.gender === 2
+                          ? "Male"
+                          : "Not specified"}
                       </p>
                     </div>
                   </div>
@@ -258,7 +262,8 @@ const Person = () => {
                       </p>
                       {person.birthday && (
                         <p className="text-xs text-gray-400 mt-1">
-                          {calculateAge(person.birthday, person.deathday)} years old
+                          {calculateAge(person.birthday, person.deathday)} years
+                          old
                           {person.deathday && " • Deceased"}
                         </p>
                       )}
@@ -366,7 +371,8 @@ const Person = () => {
             <div className="mb-12">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-gray-200">
-                  Acting Roles <span className="text-yellow-400">({sortedCast.length})</span>
+                  Acting Roles{" "}
+                  <span className="text-yellow-400">({sortedCast.length})</span>
                 </h3>
               </div>
 
@@ -387,10 +393,11 @@ const Person = () => {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-gray-200">
-                  Crew Roles <span className="text-yellow-400">({uniqueCrew.length})</span>
+                  Crew Roles{" "}
+                  <span className="text-yellow-400">({uniqueCrew.length})</span>
                 </h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {uniqueCrew.slice(0, 8).map((movie) => (
                   <div
@@ -419,7 +426,7 @@ const Person = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <h4 className="font-bold text-lg text-white mb-2 group-hover:text-yellow-400 transition-colors line-clamp-2">
                       {movie.title}
                     </h4>
@@ -443,7 +450,7 @@ const Person = () => {
                   </div>
                 ))}
               </div>
-              
+
               {uniqueCrew.length > 8 && (
                 <div className="text-center mt-6">
                   <button className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 transform hover:scale-105">
@@ -454,14 +461,16 @@ const Person = () => {
             </div>
           )}
 
-          {!movieCredits?.cast?.length && !movieCredits?.crew?.length && !creditsLoading && (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gray-700/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Film className="w-8 h-8 text-gray-400" />
+          {!movieCredits?.cast?.length &&
+            !movieCredits?.crew?.length &&
+            !creditsLoading && (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-gray-700/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Film className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-400 text-lg">No movie credits found.</p>
               </div>
-              <p className="text-gray-400 text-lg">No movie credits found.</p>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>
