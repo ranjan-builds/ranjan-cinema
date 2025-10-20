@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+
 import {
   Play,
   Bookmark,
@@ -19,6 +20,9 @@ import {
   Twitter,
   MessageCircle,
   Download,
+  ExternalLink,
+  Film,
+  Ticket,
 } from "lucide-react";
 import ColorThief from "colorthief";
 import {
@@ -26,6 +30,7 @@ import {
   getContrastColor,
   formatRuntime,
   getLighterShade,
+  getDarkerShade,
 } from "../lib/Helpers";
 
 import Card from "@/components/Card";
@@ -61,7 +66,7 @@ export async function generateStaticParams() {
 const Movie = () => {
   const { id } = useParams();
   const apiKey = import.meta.env.VITE_TMDB_API_KEY;
-
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [textColor, setTextColor] = useState("#FFFFFF");
   const [bgColor, setBgColor] = useState("#032541");
@@ -79,6 +84,9 @@ const Movie = () => {
   const [credits, setCredits] = useState([]);
   const [videos, setVideos] = useState([]);
   const [backdrops, setBackdrops] = useState([]);
+  const [collection, setCollection] = useState(null);
+  const [watchProviders, setWatchProviders] = useState({});
+  const [activeProviderTab, setActiveProviderTab] = useState("flatrate");
 
   const heroRef = useRef(null);
 
@@ -92,25 +100,50 @@ const Movie = () => {
           `https://api.themoviedb.org/3/movie/${id}/credits?api_key=${apiKey}&language=en-US`,
           `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${apiKey}&language=en-US`,
           `https://api.themoviedb.org/3/movie/${id}/images?api_key=${apiKey}`,
+          `https://api.themoviedb.org/3/movie/${id}/watch/providers?api_key=${apiKey}`,
         ];
 
-        const [movieRes, similarRes, creditsRes, videosRes, imagesRes] =
-          await Promise.all(endpoints.map((url) => fetch(url)));
+        const [
+          movieRes,
+          similarRes,
+          creditsRes,
+          videosRes,
+          imagesRes,
+          providersRes,
+        ] = await Promise.all(endpoints.map((url) => fetch(url)));
 
-        const [movieData, similarData, creditsData, videosData, imagesData] =
-          await Promise.all([
-            movieRes.json(),
-            similarRes.json(),
-            creditsRes.json(),
-            videosRes.json(),
-            imagesRes.json(),
-          ]);
+        const [
+          movieData,
+          similarData,
+          creditsData,
+          videosData,
+          imagesData,
+          providersData,
+        ] = await Promise.all([
+          movieRes.json(),
+          similarRes.json(),
+          creditsRes.json(),
+          videosRes.json(),
+          imagesRes.json(),
+          providersRes.json(),
+        ]);
 
         setMovie(movieData);
         setSimilarMovies(similarData.results?.slice(0, 12) || []);
         setCredits(creditsData.cast?.slice(0, 12) || []);
         setVideos(videosData.results || []);
         setBackdrops(imagesData.backdrops?.slice(0, 10) || []);
+        setCollection(movieData.belongs_to_collection || null);
+        setWatchProviders(providersData.results?.US || {});
+
+        // Fetch collection data if exists
+        if (movieData.belongs_to_collection) {
+          const collectionRes = await fetch(
+            `https://api.themoviedb.org/3/collection/${movieData.belongs_to_collection.id}?api_key=${apiKey}`
+          );
+          const collectionData = await collectionRes.json();
+          setCollection(collectionData);
+        }
       } catch (err) {
         console.error("Error fetching movie data:", err);
       } finally {
@@ -277,6 +310,21 @@ const Movie = () => {
     }).format(amount);
   };
 
+  // Get provider type display name
+  const getProviderTypeName = (type) => {
+    const types = {
+      flatrate: "Stream",
+      rent: "Rent",
+      buy: "Buy",
+      free: "Free",
+    };
+    return types[type] || type;
+  };
+
+  const handleClick = (castId) => {
+    navigate(`/movie/${castId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="w-full h-screen grid place-items-center bg-black">
@@ -285,24 +333,38 @@ const Movie = () => {
     );
   }
 
+  const lighterBg = getLighterShade(bgColor, 15);
+  const darkerBg = getDarkerShade(bgColor, 20);
+  const accentColor = getLighterShade(bgColor, 30);
+
   return (
     <>
-      <main className="min-h-screen bg-gray-950">
-        {/* Enhanced Hero Section */}
+      <main
+        className="min-h-screen bg-gray-950"
+        style={{ "--accent-color": accentColor }}
+      >
+        {/* Enhanced Hero Section with Dynamic Colors */}
         <div
           ref={heroRef}
           className="relative w-full min-h-screen overflow-hidden"
         >
-          {/* Background with Multiple Layers */}
+          {/* Dynamic Background with Gradient Overlay */}
           <div className="absolute inset-0">
             <div
               className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat scale-105"
               style={{
                 backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
-                filter: "brightness(0.3) blur(2px)",
+                filter: "brightness(0.4) blur(3px)",
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
+            {/* Dynamic gradient overlay based on dominant color */}
+            <div
+              className="absolute inset-0 opacity-80"
+              style={{
+                background: `linear-gradient(135deg, ${bgColor}20, ${darkerBg}80)`,
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
           </div>
 
           {/* Content */}
@@ -312,7 +374,10 @@ const Movie = () => {
                 {/* Poster Section */}
                 <div className="lg:col-span-4 xl:col-span-3 flex justify-center lg:justify-start">
                   <div className="relative group">
-                    <div className="relative w-72 h-[432px] md:w-80 md:h-[500px] rounded-2xl overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500">
+                    <div
+                      className="relative w-72 h-[432px] md:w-80 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500 border-2"
+                      style={{ borderColor: lighterBg }}
+                    >
                       <img
                         src={`${imageBaseUrl}${movie.poster_path}`}
                         className="object-cover w-full h-full"
@@ -321,14 +386,19 @@ const Movie = () => {
                       />
                     </div>
                     {/* Hover Effects */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div
+                      className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{
+                        background: `linear-gradient(to top, ${bgColor}DD, transparent)`,
+                      }}
+                    />
                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
                         onClick={toggleLike}
-                        className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                        className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 border transform hover:scale-110 ${
                           isLiked
-                            ? "bg-red-500 text-white"
-                            : "bg-black/50 text-white hover:bg-red-500"
+                            ? "bg-red-500 border-red-500 text-white"
+                            : "bg-black/50 border-white/30 text-white hover:bg-red-500"
                         }`}
                       >
                         <Heart
@@ -342,17 +412,30 @@ const Movie = () => {
 
                 {/* Movie Details */}
                 <div className="lg:col-span-8 xl:col-span-9">
-                  <div className="bg-black/30 backdrop-blur-2xl rounded-3xl p-6 md:p-8 lg:p-10 border border-white/10 shadow-2xl">
-                    {/* Header with Badges */}
+                  <div
+                    className="rounded-3xl p-6 md:p-8 lg:p-10 border shadow-2xl backdrop-blur-2xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${bgColor}15, ${darkerBg}30)`,
+                      borderColor: lighterBg,
+                    }}
+                  >
+                    {/* Header with Enhanced Badges */}
                     <div className="mb-6 md:mb-8">
                       <div className="flex flex-wrap items-center gap-3 mb-4">
-                        <div className="flex items-center gap-2 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30 px-3 py-1.5 rounded-full">
+                        <div
+                          className="flex items-center gap-2 backdrop-blur-sm border px-3 py-1.5 rounded-full"
+                          style={{
+                            backgroundColor: `${accentColor}20`,
+                            borderColor: accentColor,
+                            color: getContrastColor(accentColor),
+                          }}
+                        >
                           <Star
                             size={16}
-                            className="text-yellow-400"
+                            style={{ color: accentColor }}
                             fill="currentColor"
                           />
-                          <span className="text-yellow-100 font-bold text-sm">
+                          <span className="font-bold text-sm text-white">
                             {movie.vote_average?.toFixed(1)}
                           </span>
                         </div>
@@ -377,7 +460,10 @@ const Movie = () => {
                         </div>
                       </div>
 
-                      <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-3 bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent">
+                      <h1
+                        className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-3 bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent"
+                        style={{ textShadow: `0 4px 20px ${bgColor}80` }}
+                      >
                         {movie.title}
                       </h1>
 
@@ -392,83 +478,95 @@ const Movie = () => {
                       </div>
                     </div>
 
-                    {/* Stats Grid */}
+                    {/* Enhanced Stats Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 md:mb-8">
-                      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-yellow-400/30 transition-all duration-300 group">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users size={16} className="text-blue-400" />
-                          <span className="text-white text-sm font-medium">
-                            Votes
-                          </span>
+                      {[
+                        {
+                          icon: Users,
+                          label: "Votes",
+                          value: movie.vote_count?.toLocaleString(),
+                          color: "blue-400",
+                        },
+                        {
+                          icon: Award,
+                          label: "Rating",
+                          value: `${movie.vote_average?.toFixed(1)}/10`,
+                          color: "green-400",
+                        },
+                        {
+                          icon: Clock,
+                          label: "Runtime",
+                          value: formatRuntime(movie.runtime),
+                          color: "purple-400",
+                        },
+                        {
+                          icon: DollarSign,
+                          label: "Budget",
+                          value: formatCurrency(movie.budget),
+                          color: "orange-400",
+                        },
+                      ].map((stat, index) => (
+                        <div
+                          key={index}
+                          className="rounded-2xl p-4 border backdrop-blur-sm hover:scale-105 transition-all duration-300 group"
+                          style={{
+                            background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                            borderColor: lighterBg,
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <stat.icon
+                              size={16}
+                              style={{ color: accentColor }}
+                            />
+                            <span className="text-white text-sm font-medium">
+                              {stat.label}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-bold text-white">
+                            {stat.value}
+                          </p>
                         </div>
-                        <p className="text-2xl font-bold text-white">
-                          {movie.vote_count?.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-yellow-400/30 transition-all duration-300 group">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Award size={16} className="text-green-400" />
-                          <span className="text-white text-sm font-medium">
-                            Rating
-                          </span>
-                        </div>
-                        <p className="text-2xl font-bold text-white">
-                          {movie.vote_average?.toFixed(1)}/10
-                        </p>
-                      </div>
-                      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-yellow-400/30 transition-all duration-300 group">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Clock size={16} className="text-purple-400" />
-                          <span className="text-white text-sm font-medium">
-                            Runtime
-                          </span>
-                        </div>
-                        <p className="text-2xl font-bold text-white">
-                          {formatRuntime(movie.runtime)}
-                        </p>
-                      </div>
-                      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-yellow-400/30 transition-all duration-300 group">
-                        <div className="flex items-center gap-2 mb-2">
-                          <DollarSign size={16} className="text-orange-400" />
-                          <span className="text-white text-sm font-medium">
-                            Budget
-                          </span>
-                        </div>
-                        <p className="text-2xl font-bold text-white w-full truncate">
-                          {formatCurrency(movie.budget)}
-                        </p>
-                      </div>
+                      ))}
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Enhanced Action Buttons */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 md:mb-8">
-                      {/* Watch Trailer Button - Full width on mobile */}
+                      {/* Watch Trailer Button */}
                       <div className="w-full sm:w-auto">
                         <button
                           onClick={openTrailer}
-                          className="flex items-center justify-center gap-3 px-6 md:px-8 py-3 md:py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
+                          className="flex items-center justify-center gap-3 px-6 md:px-8 py-3 md:py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto group"
                           style={{
-                            background: `linear-gradient(135deg, ${getLighterShade(
-                              bgColor,
+                            background: `linear-gradient(135deg, ${accentColor}, ${getDarkerShade(
+                              accentColor,
                               20
-                            )}, ${getLighterShade(bgColor, -10)})`,
-                            color: getContrastColor(bgColor),
+                            )})`,
+                            color: textColor,
                           }}
                         >
-                          <Play size={20} className="flex-shrink-0" />
+                          <Play
+                            size={20}
+                            className="flex-shrink-0 group-hover:scale-110 transition-transform"
+                          />
                           <span>Watch Trailer</span>
                         </button>
                       </div>
 
-                      {/* Action Buttons - Aligned properly on mobile */}
+                      {/* Action Buttons */}
                       <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
                         <button
                           onClick={toggleBookmark}
                           className={`flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 flex-1 sm:flex-none ${
                             isBookmarked
-                              ? "bg-yellow-500 border-yellow-500 text-gray-900"
-                              : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                              ? "text-yellow-400 border-yellow-400"
+                              : "text-white border-white/20 hover:border-yellow-400 hover:text-yellow-400"
                           }`}
+                          style={{
+                            background: isBookmarked
+                              ? `${accentColor}20`
+                              : `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                          }}
                         >
                           <Bookmark
                             size={20}
@@ -485,7 +583,12 @@ const Movie = () => {
                               "_blank"
                             )
                           }
-                          className="flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 bg-white/10 border-white/20 text-white hover:bg-white/20 flex-1 sm:flex-none"
+                          className="flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 flex-1 sm:flex-none"
+                          style={{
+                            background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                            borderColor: lighterBg,
+                            color: "white",
+                          }}
                         >
                           <Download size={20} />
                         </button>
@@ -495,7 +598,14 @@ const Movie = () => {
                           onOpenChange={setShowShareDropdown}
                         >
                           <DropdownMenuTrigger asChild>
-                            <button className="flex items-center justify-center w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl transition-all duration-300 border border-white/20 text-white transform hover:scale-110 flex-1 sm:flex-none">
+                            <button
+                              className="flex items-center justify-center w-12 h-12 backdrop-blur-sm rounded-2xl transition-all duration-300 border transform hover:scale-110 flex-1 sm:flex-none"
+                              style={{
+                                background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                                borderColor: lighterBg,
+                                color: "white",
+                              }}
+                            >
                               {copySuccess ? (
                                 <Check size={20} />
                               ) : (
@@ -503,31 +613,37 @@ const Movie = () => {
                               )}
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-gray-800 border border-gray-700 rounded-xl backdrop-blur-sm">
+                          <DropdownMenuContent
+                            className="rounded-xl backdrop-blur-sm border"
+                            style={{
+                              background: `linear-gradient(135deg, ${darkerBg}, ${bgColor}30)`,
+                              borderColor: lighterBg,
+                            }}
+                          >
                             <DropdownMenuItem
                               onClick={() => shareMovie("copy")}
-                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
+                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer rounded-lg"
                             >
                               <Link size={16} />
                               Copy Link
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => shareMovie("twitter")}
-                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
+                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer rounded-lg"
                             >
                               <Twitter size={16} />
                               Share on Twitter
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => shareMovie("facebook")}
-                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
+                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer rounded-lg"
                             >
                               <Facebook size={16} />
                               Share on Facebook
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => shareMovie("whatsapp")}
-                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer"
+                              className="flex items-center gap-3 text-white hover:bg-gray-700 cursor-pointer rounded-lg"
                             >
                               <MessageCircle size={16} />
                               Share on WhatsApp
@@ -540,7 +656,10 @@ const Movie = () => {
                     {/* Overview */}
                     <div className="space-y-4">
                       {movie.tagline && (
-                        <p className="text-xl md:text-2xl italic text-gray-300 font-light text-center md:text-left">
+                        <p
+                          className="text-xl md:text-2xl italic text-center md:text-left font-light"
+                          style={{ color: accentColor }}
+                        >
                           "{movie.tagline}"
                         </p>
                       )}
@@ -562,6 +681,182 @@ const Movie = () => {
 
         {/* Content Sections */}
         <div className="relative z-20 bg-gray-900">
+          {/* Watch Providers Section */}
+
+          {Object.keys(watchProviders).length > 0 && (
+            <section className="py-16">
+              <div className="container mx-auto px-4 md:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white">
+                    Where to Watch
+                  </h2>
+                  <Ticket size={24} className="text-gray-400" />
+                </div>
+                <div
+                  className="rounded-3xl p-6 border backdrop-blur-sm"
+                  style={{
+                    background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                    borderColor: lighterBg,
+                  }}
+                >
+                  {/* Provider Type Tabs */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {Object.keys(watchProviders)
+                      .filter(
+                        (type) =>
+                          watchProviders[type] &&
+                          Array.isArray(watchProviders[type]) &&
+                          watchProviders[type].length > 0
+                      )
+                      .map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setActiveProviderTab(type)}
+                          className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                            activeProviderTab === type
+                              ? "text-white shadow-lg"
+                              : "text-gray-400 hover:text-white"
+                          }`}
+                          style={{
+                            background:
+                              activeProviderTab === type
+                                ? `linear-gradient(135deg, ${accentColor}, ${getDarkerShade(
+                                    accentColor,
+                                    20
+                                  )})`
+                                : `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                            border:
+                              activeProviderTab === type
+                                ? "none"
+                                : `1px solid ${lighterBg}`,
+                          }}
+                        >
+                          {getProviderTypeName(type)}
+                        </button>
+                      ))}
+                  </div>
+
+                  {/* Providers Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {watchProviders[activeProviderTab] &&
+                      Array.isArray(watchProviders[activeProviderTab]) &&
+                      watchProviders[activeProviderTab].map((provider) => (
+                        <div
+                          key={provider.provider_id}
+                          className="flex flex-col items-center p-4 rounded-2xl transition-all duration-300 hover:scale-105 group"
+                          style={{
+                            background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                            border: `1px solid ${lighterBg}`,
+                          }}
+                        >
+                          {provider.logo_path && (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w200${provider.logo_path}`}
+                              alt={provider.provider_name}
+                              className="w-16 h-16 rounded-xl mb-3 object-cover group-hover:shadow-lg transition-shadow"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          )}
+                          <span className="text-white text-sm font-medium text-center">
+                            {provider.provider_name}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Fallback message when no providers available for selected tab */}
+                  {(!watchProviders[activeProviderTab] ||
+                    !Array.isArray(watchProviders[activeProviderTab]) ||
+                    watchProviders[activeProviderTab].length === 0) && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-400 text-lg">
+                        No {getProviderTypeName(activeProviderTab)} options
+                        available
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+          {/* Collection Section */}
+          {collection && (
+            <section className="py-16 bg-gray-800/30">
+              <div className="container mx-auto px-4 md:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white">
+                    {collection.name}
+                  </h2>
+                  <Film size={24} className="text-gray-400" />
+                </div>
+                <div
+                  className="rounded-3xl overflow-hidden border backdrop-blur-sm"
+                  style={{
+                    background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                    borderColor: lighterBg,
+                  }}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+                    <div className="md:col-span-1">
+                      <img
+                        src={`https://image.tmdb.org/t/p/w500${collection.poster_path}`}
+                        alt={collection.name}
+                        className="w-full rounded-2xl shadow-2xl"
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex flex-col justify-center">
+                      <h3 className="text-2xl font-bold text-white mb-4">
+                        {collection.name}
+                      </h3>
+                      <p className="text-gray-300 mb-6 leading-relaxed">
+                        {collection.overview ||
+                          `Explore the entire ${
+                            collection.name
+                          } collection featuring ${
+                            collection.parts?.length || 0
+                          } movies.`}
+                      </p>
+                      <div className="flex flex-wrap gap-3 ">
+                        {collection.parts?.slice(0, 4).map((part) => (
+                          <div
+                            key={part.id}
+                            onClick={() => handleClick(part.id)}
+                            className="flex items-center gap-3 px-4 py-2 rounded-xl cursor-pointer"
+                            style={{
+                              background: `linear-gradient(135deg, ${bgColor}20, ${darkerBg}30)`,
+                              border: `1px solid ${lighterBg}`,
+                            }}
+                          >
+                            <img
+                              src={`https://image.tmdb.org/t/p/w92${part.poster_path}`}
+                              alt={part.title}
+                              className="w-8 h-12 rounded object-cover"
+                            />
+                            <span className="text-white text-sm font-medium">
+                              {part.title}
+                            </span>
+                          </div>
+                        ))}
+                        {collection.parts?.length > 4 && (
+                          <div
+                            className="px-4 py-2 rounded-xl text-white font-medium"
+                            style={{
+                              background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}40)`,
+                              border: `1px solid ${accentColor}`,
+                            }}
+                          >
+                            +{collection.parts.length - 4} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
           {/* Backdrops Section */}
           {backdrops.length > 0 && (
             <section className="py-16">
@@ -582,7 +877,6 @@ const Movie = () => {
               </div>
             </section>
           )}
-
           {/* Cast Section */}
           {credits.length > 0 && (
             <section className="py-16 bg-gray-800/50">
@@ -591,7 +885,6 @@ const Movie = () => {
               </div>
             </section>
           )}
-
           {/* Similar Movies */}
           {similarMovies.length > 0 && (
             <section className="py-16">
@@ -625,10 +918,22 @@ const Movie = () => {
 
         {/* Mobile Action Bar */}
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 lg:hidden">
-          <div className="flex items-center gap-2 bg-black/80 backdrop-blur-lg rounded-2xl px-4 py-3 border border-white/10 shadow-2xl">
+          <div
+            className="flex items-center gap-2 backdrop-blur-lg rounded-2xl px-4 py-3 border shadow-2xl"
+            style={{
+              background: `linear-gradient(135deg, ${bgColor}30, ${darkerBg}50)`,
+              borderColor: lighterBg,
+            }}
+          >
             <button
               onClick={openTrailer}
-              className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-900 px-4 py-2 rounded-xl text-sm font-semibold flex-1"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold flex-1 text-white"
+              style={{
+                background: `linear-gradient(135deg, ${accentColor}, ${getDarkerShade(
+                  accentColor,
+                  20
+                )})`,
+              }}
             >
               <Play size={16} />
               Trailer
@@ -638,7 +943,7 @@ const Movie = () => {
               className={`p-2 rounded-xl transition-colors transform hover:scale-110 ${
                 isBookmarked
                   ? "text-yellow-400"
-                  : "text-white hover:bg-white/10"
+                  : "text-white hover:text-yellow-400"
               }`}
             >
               <Bookmark
@@ -648,7 +953,7 @@ const Movie = () => {
             </button>
             <button
               onClick={() => shareMovie("copy")}
-              className="p-2 text-white hover:bg-white/10 rounded-xl transition-colors transform hover:scale-110"
+              className="p-2 text-white hover:text-gray-300 rounded-xl transition-colors transform hover:scale-110"
             >
               {copySuccess ? <Check size={16} /> : <Share2 size={16} />}
             </button>
@@ -658,8 +963,16 @@ const Movie = () => {
 
       {/* Trailer Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="max-h-[90vh] bg-black ">
-          <DrawerHeader className="text-center">
+        <DrawerContent
+          className="max-h-[90vh] border-0"
+          style={{
+            background: `linear-gradient(135deg, ${darkerBg}, ${bgColor}30)`,
+          }}
+        >
+          <DrawerHeader
+            className="text-center border-b"
+            style={{ borderColor: lighterBg }}
+          >
             <DrawerTitle className="text-2xl text-white">
               {movie?.title} - Trailer
             </DrawerTitle>

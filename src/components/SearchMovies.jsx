@@ -26,11 +26,11 @@ export default function SearchMovies({ className = "" }) {
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    if (open && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
+useEffect(() => {
+  if (open && inputRef.current) {
+    setTimeout(() => inputRef.current?.focus(), 150); // Changed from 100ms to 150ms
+  }
+}, [open]);
 
   useEffect(() => {
     if (!open) {

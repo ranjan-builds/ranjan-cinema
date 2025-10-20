@@ -1,4 +1,3 @@
-
 export function rgbToHex(r, g, b) {
   return (
     "#" +
@@ -10,7 +9,6 @@ export function rgbToHex(r, g, b) {
       .join("")
   );
 }
-
 
 export function getContrastColor(hexColor) {
   if (!hexColor) return "#FFFFFF";
@@ -38,9 +36,6 @@ export function getContrastColor(hexColor) {
   return brightness > 128 ? "#000000" : "#FFFFFF";
 }
 
-
-
-
 export function formatRuntime(mins) {
   if (!mins || isNaN(mins)) return "N/A";
 
@@ -52,7 +47,6 @@ export function formatRuntime(mins) {
   return `${hours}h ${minutes}m`;
 }
 
-
 export function formatPopularity(popularity, maxValue = 300) {
   if (!popularity || isNaN(popularity)) return 0;
 
@@ -63,11 +57,26 @@ export function formatPopularity(popularity, maxValue = 300) {
 }
 
 // Simple color adjustment functions
-export function getLighterShade (color, percent)  {
+export function getLighterShade(color, percent) {
   const num = parseInt(color.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
   const R = Math.min(255, Math.max(0, (num >> 16) + amt));
-  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
-  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
-  return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00ff) + amt));
+  const B = Math.min(255, Math.max(0, (num & 0x0000ff) + amt));
+  return `#${((1 << 24) | (R << 16) | (G << 8) | B).toString(16).slice(1)}`;
+}
+
+// Add to your existing Helpers.js
+export const getDarkerShade = (hex, percent) => {
+  // Convert hex to RGB
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+
+  // Darken each component
+  r = Math.floor((r * (100 - percent)) / 100);
+  g = Math.floor((g * (100 - percent)) / 100);
+  b = Math.floor((b * (100 - percent)) / 100);
+
+  return rgbToHex(r, g, b);
 };
