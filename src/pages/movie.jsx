@@ -523,7 +523,7 @@ const Movie = () => {
                               {stat.label}
                             </span>
                           </div>
-                          <p className="text-2xl font-bold text-white">
+                          <p className="text-2xl font-bold text-white w-full truncate">
                             {stat.value}
                           </p>
                         </div>
