@@ -178,7 +178,6 @@ export default function Navbar() {
                   <Menu className="w-6 h-6 text-gray-300" />
                 )}
               </Button>
-         
             </div>
           </div>
         </div>

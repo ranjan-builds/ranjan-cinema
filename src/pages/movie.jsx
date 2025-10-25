@@ -23,6 +23,8 @@ import {
   ExternalLink,
   Film,
   Ticket,
+  ShoppingBag,
+  MonitorPlay,
 } from "lucide-react";
 import ColorThief from "colorthief";
 import {
@@ -302,9 +304,9 @@ const Movie = () => {
 
   const formatCurrency = (amount) => {
     if (!amount) return "N/A";
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -321,8 +323,43 @@ const Movie = () => {
     return types[type] || type;
   };
 
-  const handleClick = (castId) => {
-    navigate(`/movie/${castId}`);
+  // Get provider type icon
+  const getProviderTypeIcon = (type) => {
+    const icons = {
+      flatrate: MonitorPlay,
+      rent: DollarSign,
+      buy: ShoppingBag,
+      free: Award,
+    };
+    return icons[type] || Ticket;
+  };
+
+  // Handle provider click
+  const handleProviderClick = (provider, type) => {
+    // In a real app, you would have actual deep links or URLs for each provider
+    // For now, we'll simulate with a search query
+    const searchQuery = encodeURIComponent(`${movie.title} ${type}`);
+
+    // You can replace this with actual provider URLs when available
+    const providerUrls = {
+      netflix: `https://netflix.com/search?q=${searchQuery}`,
+      amazon: `https://primevideo.com/search?q=${searchQuery}`,
+      hbo: `https://hbomax.com/search?q=${searchQuery}`,
+      hulu: `https://hulu.com/search?q=${searchQuery}`,
+      disney: `https://disneyplus.com/search?q=${searchQuery}`,
+      apple: `https://tv.apple.com/search?q=${searchQuery}`,
+    };
+
+    const providerName = provider.provider_name.toLowerCase();
+    const url =
+      providerUrls[providerName] ||
+      `https://google.com/search?q=${searchQuery}+streaming`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleClick = (id) => {
+    navigate(`/movie/${id}`);
   };
 
   if (isLoading) {
@@ -375,7 +412,7 @@ const Movie = () => {
                 <div className="lg:col-span-4 xl:col-span-3 flex justify-center lg:justify-start">
                   <div className="relative group">
                     <div
-                      className="relative w-72 h-[432px] md:w-80 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500 border-2"
+                      className="relative w-72 h-[432px] md:w-80 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500 border-1"
                       style={{ borderColor: lighterBg }}
                     >
                       <img
@@ -681,26 +718,31 @@ const Movie = () => {
 
         {/* Content Sections */}
         <div className="relative z-20 bg-gray-900">
-          {/* Watch Providers Section */}
-
+          {/* Enhanced Watch Providers Section */}
           {Object.keys(watchProviders).length > 0 && (
             <section className="py-16">
               <div className="container mx-auto px-4 md:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-3xl md:text-4xl font-bold text-white">
-                    Where to Watch
-                  </h2>
-                  <Ticket size={24} className="text-gray-400" />
+                  <div className="flex items-center gap-3">
+                    <Ticket size={32} className="text-blue-400" />
+                    <h2 className="text-3xl md:text-4xl font-bold text-white">
+                      Where to Watch
+                    </h2>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    Click on any provider to watch
+                  </div>
                 </div>
+
                 <div
-                  className="rounded-3xl p-6 border backdrop-blur-sm"
+                  className="rounded-3xl p-6 backdrop-blur-sm border"
                   style={{
                     background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
                     borderColor: lighterBg,
                   }}
                 >
-                  {/* Provider Type Tabs */}
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  {/* Enhanced Provider Type Tabs */}
+                  <div className="flex flex-wrap gap-3 mb-8">
                     {Object.keys(watchProviders)
                       .filter(
                         (type) =>
@@ -708,79 +750,129 @@ const Movie = () => {
                           Array.isArray(watchProviders[type]) &&
                           watchProviders[type].length > 0
                       )
-                      .map((type) => (
+                      .map((type) => {
+                        const ProviderIcon = getProviderTypeIcon(type);
+                        return (
+                          <button
+                            key={type}
+                            onClick={() => setActiveProviderTab(type)}
+                            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                              activeProviderTab === type
+                                ? "text-black shadow-lg"
+                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                            }`}
+                            style={{
+                              background:
+                                activeProviderTab === type
+                                  ? `linear-gradient(135deg, ${accentColor}, ${getDarkerShade(
+                                      accentColor,
+                                      20
+                                    )})`
+                                  : `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
+                            }}
+                          >
+                            <ProviderIcon size={18} />
+                            <span>{getProviderTypeName(type)}</span>
+                            <span className="text-xs opacity-80 ml-1">
+                              ({watchProviders[type].length})
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+
+                  {/* Enhanced Providers Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {watchProviders[activeProviderTab] &&
+                      Array.isArray(watchProviders[activeProviderTab]) &&
+                      watchProviders[activeProviderTab].map((provider) => (
                         <button
-                          key={type}
-                          onClick={() => setActiveProviderTab(type)}
-                          className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                            activeProviderTab === type
-                              ? "text-white shadow-lg"
-                              : "text-gray-400 hover:text-white"
-                          }`}
+                          key={provider.provider_id}
+                          onClick={() =>
+                            handleProviderClick(provider, activeProviderTab)
+                          }
+                          className="flex flex-col items-center p-4 rounded-2xl transition-all duration-300 hover:scale-105 group cursor-pointer border-2 border-transparent hover:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50"
                           style={{
-                            background:
-                              activeProviderTab === type
-                                ? `linear-gradient(135deg, ${accentColor}, ${getDarkerShade(
-                                    accentColor,
-                                    20
-                                  )})`
-                                : `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
-                            border:
-                              activeProviderTab === type
-                                ? "none"
-                                : `1px solid ${lighterBg}`,
+                            background: `linear-gradient(135deg, ${bgColor}15, ${darkerBg}25)`,
                           }}
                         >
-                          {getProviderTypeName(type)}
+                          {provider.logo_path ? (
+                            <div className="relative mb-3">
+                              <img
+                                src={`https://image.tmdb.org/t/p/w200${provider.logo_path}`}
+                                alt={provider.provider_name}
+                                className="w-16 h-16 rounded-xl object-cover group-hover:shadow-lg transition-shadow"
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.nextSibling.style.display = "flex";
+                                }}
+                              />
+                              <div
+                                className="hidden w-16 h-16 rounded-xl bg-gray-700 items-center justify-center"
+                                style={{ backgroundColor: `${accentColor}20` }}
+                              >
+                                <MonitorPlay
+                                  size={24}
+                                  className="text-gray-400"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              className="w-16 h-16 rounded-xl mb-3 flex items-center justify-center"
+                              style={{ backgroundColor: `${accentColor}20` }}
+                            >
+                              <MonitorPlay
+                                size={24}
+                                className="text-gray-400"
+                              />
+                            </div>
+                          )}
+
+                          <span className="text-white text-sm font-medium text-center group-hover:text-accent transition-colors">
+                            {provider.provider_name}
+                          </span>
+
+                          {/* Hover indicator */}
+                          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ExternalLink size={14} className="text-accent" />
+                          </div>
                         </button>
                       ))}
                   </div>
 
-                  {/* Providers Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {watchProviders[activeProviderTab] &&
-                      Array.isArray(watchProviders[activeProviderTab]) &&
-                      watchProviders[activeProviderTab].map((provider) => (
-                        <div
-                          key={provider.provider_id}
-                          className="flex flex-col items-center p-4 rounded-2xl transition-all duration-300 hover:scale-105 group"
-                          style={{
-                            background: `linear-gradient(135deg, ${bgColor}10, ${darkerBg}20)`,
-                            border: `1px solid ${lighterBg}`,
-                          }}
-                        >
-                          {provider.logo_path && (
-                            <img
-                              src={`https://image.tmdb.org/t/p/w200${provider.logo_path}`}
-                              alt={provider.provider_name}
-                              className="w-16 h-16 rounded-xl mb-3 object-cover group-hover:shadow-lg transition-shadow"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                              }}
-                            />
-                          )}
-                          <span className="text-white text-sm font-medium text-center">
-                            {provider.provider_name}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Fallback message when no providers available for selected tab */}
+                  {/* Enhanced Empty State */}
                   {(!watchProviders[activeProviderTab] ||
                     !Array.isArray(watchProviders[activeProviderTab]) ||
                     watchProviders[activeProviderTab].length === 0) && (
-                    <div className="text-center py-8">
-                      <p className="text-gray-400 text-lg">
+                    <div className="text-center py-12">
+                      <MonitorPlay
+                        size={48}
+                        className="text-gray-500 mx-auto mb-4"
+                      />
+                      <p className="text-gray-400 text-lg mb-2">
                         No {getProviderTypeName(activeProviderTab)} options
                         available
                       </p>
+                      <p className="text-gray-500 text-sm">
+                        Try checking other streaming options
+                      </p>
                     </div>
                   )}
+
+                  {/* Provider Count Summary */}
+                  <div className="mt-6 pt-6 border-t border-gray-700">
+                    <p className="text-gray-400 text-sm text-center">
+                      Found {Object.values(watchProviders).flat().length} total
+                      streaming options across{" "}
+                      {Object.keys(watchProviders).length} categories
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
           )}
+
           {/* Collection Section */}
           {collection && (
             <section className="py-16 bg-gray-800/30">
@@ -823,7 +915,7 @@ const Movie = () => {
                           <div
                             key={part.id}
                             onClick={() => handleClick(part.id)}
-                            className="flex items-center gap-3 px-4 py-2 rounded-xl cursor-pointer"
+                            className="flex items-center gap-3 px-4 py-2 rounded-xl cursor-pointer hover:scale-105 transition-transform"
                             style={{
                               background: `linear-gradient(135deg, ${bgColor}20, ${darkerBg}30)`,
                               border: `1px solid ${lighterBg}`,
@@ -841,7 +933,7 @@ const Movie = () => {
                         ))}
                         {collection.parts?.length > 4 && (
                           <div
-                            className="px-4 py-2 rounded-xl text-white font-medium"
+                            className="px-4 py-2 rounded-xl text-white font-medium cursor-pointer hover:scale-105 transition-transform"
                             style={{
                               background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}40)`,
                               border: `1px solid ${accentColor}`,
@@ -857,6 +949,7 @@ const Movie = () => {
               </div>
             </section>
           )}
+
           {/* Backdrops Section */}
           {backdrops.length > 0 && (
             <section className="py-16">
@@ -877,6 +970,7 @@ const Movie = () => {
               </div>
             </section>
           )}
+
           {/* Cast Section */}
           {credits.length > 0 && (
             <section className="py-16 bg-gray-800/50">
@@ -885,6 +979,7 @@ const Movie = () => {
               </div>
             </section>
           )}
+
           {/* Similar Movies */}
           {similarMovies.length > 0 && (
             <section className="py-16">
@@ -963,16 +1058,8 @@ const Movie = () => {
 
       {/* Trailer Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent
-          className="max-h-[90vh] border-0"
-          style={{
-            background: `linear-gradient(135deg, ${darkerBg}, ${bgColor}30)`,
-          }}
-        >
-          <DrawerHeader
-            className="text-center border-b"
-            style={{ borderColor: lighterBg }}
-          >
+        <DrawerContent className="max-h-[90vh] bg-black">
+          <DrawerHeader className="text-center ">
             <DrawerTitle className="text-2xl text-white">
               {movie?.title} - Trailer
             </DrawerTitle>

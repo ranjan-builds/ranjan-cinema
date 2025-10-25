@@ -365,7 +365,7 @@ const Discover = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-950 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -383,7 +383,7 @@ const Discover = () => {
 
         {/* Random Movie Suggestion */}
         {randomMovie && (
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-8 border border-gray-700/50 mb-12">
+          <div className="bg-gradient-to-br from-gray-950 to-gray-900 rounded-3xl p-8 border border-gray-700/50 mb-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                 <Shuffle className="w-6 h-6 text-yellow-400" />
@@ -481,7 +481,7 @@ const Discover = () => {
         )}
 
         {/* Search and Filters */}
-        <div className="bg-gray-800/50 backdrop-blur-xl rounded-3xl p-6 border border-gray-700/50 mb-8">
+        <div className="bg-gray-900/50 backdrop-blur-xl rounded-3xl p-6 border border-gray-700/50 mb-8">
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="mb-6">
             <div className="relative">
@@ -491,7 +491,7 @@ const Discover = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for movies..."
-                className="w-full pl-12 pr-4 py-4 bg-gray-700/50 border border-gray-600/50 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/30 transition-all duration-300"
+                className="w-full pl-12 pr-4 py-4 bg-gray-900/50 border border-gray-600/50 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/30 transition-all duration-300"
               />
               <button
                 type="submit"
@@ -506,7 +506,7 @@ const Discover = () => {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white border border-gray-600/50 rounded-xl transition-all duration-300"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900/50 hover:bg-gray-600/50 text-white border border-gray-600/50 rounded-xl transition-all duration-300"
             >
               <SlidersHorizontal className="w-4 h-4" />
               Filters
